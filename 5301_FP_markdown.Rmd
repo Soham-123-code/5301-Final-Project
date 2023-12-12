@@ -1,0 +1,312 @@
+---
+title: "5301-Final Report"
+author: "Soham Neeraj Agarkar (1002157894) & Utkarsh Pant (1002170893"
+date: "2023-12-12"
+output: 
+  pdf_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Effect of Gender and Diet on Weight Loss
+
+## General Declaration
+
+```{r}
+library(WRS2)
+library(patchwork)
+library(car)
+library(outliers)
+library(dplyr)
+```
+
+## Introduction
+
+In today's world there is a very heavy focus on weight loss. Scores of corporations are constantly locked in a struggle to make products that target factors such as weight gain, weight loss and general beauty products and market them to a wide spectrum of audiences. In such a market, data analysis could play a crucial role and allow corporations to make an informed decision on what their product needs versus what their customers want.
+
+Today we set out to understand which attributes are the most likely to affect a person's weight loss. We will work with the diet data set that is already a present in the [WRS2] package.
+
+## Problem Statement
+
+Perform Two-Way ANOVA on the features *gender* and *diet.type* to determine which is more influential to *weight.loss* feature.
+
+## Descriptive Analysis
+
+Below is the distribution of our data's descriptive analysis :
+
+```{r}
+str(diet)
+```
+
+We can observe from the above the analysis the structure of our data set. The data possesses two categorical variables and the rest are numerical.
+
+```{r}
+summary(diet$gender)
+```
+
+```{r}
+summary(diet$age)
+```
+
+```{r}
+summary(diet$height)
+```
+
+```{r}
+summary(diet$diet.type)
+```
+
+```{r}
+summary(diet$initial.weight)
+```
+
+```{r}
+summary(diet$final.weight)
+```
+
+```{r}
+summary(diet$weight.loss)
+```
+
+Here we see the feature wise summary statistics.
+
+Below we see the features statistics while being grouped by ***gender** :*
+
+```{r}
+diet %>%
+  group_by(diet$gender) %>%
+  summarise(
+    Mean = mean(diet$age),
+    Median = median(diet$age),
+    SD = sd(diet$age),
+    Min = min(diet$age),
+    Max = max(diet$age)
+  )
+```
+
+```{r}
+diet %>%
+  group_by(diet$gender) %>%
+  summarise(
+    Mean = mean(diet$height),
+    Median = median(diet$height),
+    SD = sd(diet$height),
+    Min = min(diet$height),
+    Max = max(diet$height)
+  )
+```
+
+```{r}
+diet %>%
+  group_by(diet$gender) %>%
+  summarise(
+    Mean = mean(diet$initial.weight),
+    Median = median(diet$initial.weight),
+    SD = sd(diet$initial.weight),
+    Min = min(diet$initial.weight),
+    Max = max(diet$initial.weight)
+  )
+```
+
+```{r}
+diet %>%
+  group_by(diet$gender) %>%
+  summarise(
+    Mean = mean(diet$final.weight),
+    Median = median(diet$final.weight),
+    SD = sd(diet$final.weight),
+    Min = min(diet$final.weight),
+    Max = max(diet$final.weight)
+  )
+```
+
+```{r}
+diet %>%
+  group_by(diet$gender) %>%
+  summarise(
+    Mean = mean(diet$weight.loss),
+    Median = median(diet$weight.loss),
+    SD = sd(diet$weight.loss),
+    Min = min(diet$weight.loss),
+    Max = max(diet$weight.loss)
+  )
+```
+
+Below we see the feature statistics while grouped by ***diet.type*** :
+
+```{r}
+diet %>%
+  group_by(diet$diet.type) %>%
+  summarise(
+    Mean = mean(diet$age),
+    Median = median(diet$age),
+    SD = sd(diet$age),
+    Min = min(diet$age),
+    Max = max(diet$age)
+  )
+```
+
+```{r}
+diet %>%
+  group_by(diet$diet.type) %>%
+  summarise(
+    Mean = mean(diet$height),
+    Median = median(diet$height),
+    SD = sd(diet$height),
+    Min = min(diet$height),
+    Max = max(diet$height)
+  )
+```
+
+```{r}
+diet %>%
+  group_by(diet$diet.type) %>%
+  summarise(
+    Mean = mean(diet$initial.weight),
+    Median = median(diet$initial.weight),
+    SD = sd(diet$initial.weight),
+    Min = min(diet$initial.weight),
+    Max = max(diet$initial.weight)
+  )
+```
+
+```{r}
+diet %>%
+  group_by(diet$diet.type) %>%
+  summarise(
+    Mean = mean(diet$final.weight),
+    Median = median(diet$final.weight),
+    SD = sd(diet$final.weight),
+    Min = min(diet$final.weight),
+    Max = max(diet$final.weight)
+  )
+```
+
+```{r}
+diet %>%
+  group_by(diet$diet.type) %>%
+  summarise(
+    Mean = mean(diet$weight.loss),
+    Median = median(diet$weight.loss),
+    SD = sd(diet$weight.loss),
+    Min = min(diet$weight.loss),
+    Max = max(diet$weight.loss)
+  )
+```
+
+**Frequency of Categorical variables** :
+
+```{r}
+# Frequency table for a gender
+table(diet$gender)
+
+# Percentage table for a gender
+prop.table(table(diet$gender)) * 100
+
+```
+
+```{r}
+# Frequency table for a diet.type
+table(diet$diet.type)
+
+# Percentage table for a categorical variable
+prop.table(table(diet$diet.type)) * 100
+
+```
+
+**Checking for missing values :**
+
+```{r}
+colSums(is.na(diet))
+```
+
+As evidenced by the result of the code above, there are **no missing values** in our data set.
+
+## Plots and Visualizations
+
+Plots for Gender
+
+```{r}
+#specifying colors for the plot
+gender_colors <- c("hotpink", "blue")
+
+#histogram weightloss by gender 
+p1 <- ggplot(data = diet, aes(x = weight.loss, fill = gender)) +
+  geom_histogram(position = "identity", alpha = 0.65) +
+  labs(title = "Weight Loss vs Gender", x = "Weight Loss", y = "Count") +
+  scale_fill_manual(values = gender_colors) +
+  theme_minimal() 
+
+#density plot for weightloss by diet.type
+p2 <- ggplot(data = diet, aes(x=weight.loss, fill = gender)) +
+  geom_density(aes(x=weight.loss, color = gender), position  = "identity", alpha = 0.65, linewidth = 1) +
+  labs(title = "Weight Loss vs Gender", x= "Weight Loss") +
+  scale_fill_manual(values = gender_colors) +
+  theme_minimal()
+
+#Gender plots
+p1 + p2
+
+```
+
+Box plot for Gender:
+
+```{r}
+#boxplot for weightloss by gender
+ggplot(data =diet, aes(x=weight.loss, fill = gender)) +
+  geom_boxplot(aes(x = gender, y=weight.loss, group = gender)) +
+  labs(title = "Weight Loss grouped by Gender", x="Gender", y = "Weight Loss") + 
+  scale_fill_manual(values = gender_colors) +
+  theme_minimal()
+```
+
+```{r}
+#diet colors
+diet_colors <- c("#b30000", "#0d88e6", "#ebdc78")
+
+#Histogram plots for weight loss by diet type
+p3 <- ggplot(data= diet, aes(x = diet$weight.loss, fill = diet$diet.type)) +
+  geom_histogram(position = "identity", alpha = 0.7) +
+  labs(title = "Weight Loss by Diet Type", x="Weight Loss", y="Count") +
+  scale_fill_manual(values = diet_colors) +
+  theme_minimal()
+
+p4 <- ggplot(data = diet, aes(x = diet$weight.loss, fill = diet$diet.type)) + 
+  geom_density(aes(x=weight.loss), position = "identity", alpha =0.65, linewidth =1) +
+  labs(title = "Weight Loss by Diet Type", x= "Weight Loss") +
+  scale_fill_manual(values = diet_colors) +
+  theme_minimal()
+
+#Plots for weight loss by diet type
+p3 + p4
+```
+
+```{r}
+#boxplot for weight loss by diet type
+ggplot(data = diet, aes(x=weight.los, fill = diet.type)) + 
+  geom_boxplot(aes(x=diet.type, y=weight.loss, group = diet.type)) +
+  labs(title = "Boxplot for Weightloss by Diet Type", x = "Diet Type", y = "Weight Loss") + 
+  scale_fill_manual(values = diet_colors) +
+  theme_minimal()
+```
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
