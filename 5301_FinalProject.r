@@ -2,6 +2,8 @@ library(WRS2)
 library(patchwork)
 library(car)
 library(outliers)
+library(dplyr)
+library(ggplot2)
 
 head(diet)
 View(diet)
