@@ -11,6 +11,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+\newpage
+
 # Effect of Gender and Diet on Weight Loss
 
 ## General Declaration
@@ -21,7 +23,10 @@ library(patchwork)
 library(car)
 library(outliers)
 library(dplyr)
+library(ggplot2)
 ```
+
+\newpage
 
 ## Introduction
 
@@ -32,6 +37,8 @@ Today we set out to understand which attributes are the most likely to affect a 
 ## Problem Statement
 
 Perform Two-Way ANOVA on the features *gender* and *diet.type* to determine which is more influential to *weight.loss* feature.
+
+\newpage
 
 ## Descriptive Analysis
 
@@ -225,9 +232,11 @@ colSums(is.na(diet))
 
 As evidenced by the result of the code above, there are **no missing values** in our data set.
 
+\newpage
+
 ## Plots and Visualizations
 
-Plots for Gender
+**Plots for Gender**
 
 ```{r}
 #specifying colors for the plot
@@ -252,7 +261,7 @@ p1 + p2
 
 ```
 
-Box plot for Gender:
+**Box plot for Gender**:
 
 ```{r}
 #boxplot for weightloss by gender
@@ -262,6 +271,8 @@ ggplot(data =diet, aes(x=weight.loss, fill = gender)) +
   scale_fill_manual(values = gender_colors) +
   theme_minimal()
 ```
+
+**Plots for Diet Type:**
 
 ```{r}
 #diet colors
@@ -283,6 +294,8 @@ p4 <- ggplot(data = diet, aes(x = diet$weight.loss, fill = diet$diet.type)) +
 #Plots for weight loss by diet type
 p3 + p4
 ```
+
+**Box plot for Diet Type:**
 
 ```{r}
 #boxplot for weight loss by diet type
@@ -307,6 +320,8 @@ grubbs.test(diet$weight.loss)
 ```
 
 The above code displays the outlier in the data. Since there is only outlier in the data, we chose to leave it in as it doesn't affect the overall outcome of the analysis.
+
+\newpage
 
 ## ANOVA
 
@@ -389,6 +404,8 @@ Judging by the results of the ANOVA, we can conclude that ***diet.type*** plays 
 
 Thus, we reject the null hypothesis $H_O$ that the means of groups by *gender* are similar, means of groups by *diet.type* are similar and there is no significant interaction between *gender* and *diet.type* features.
 
+\newpage
+
 ## Post-Hoc Analysis
 
 ```{r}
@@ -397,6 +414,8 @@ TukeyHSD(model)
 ```
 
 Having rejected the null hypothesis $H_O$. We wanted to know which factor plays the biggest role in Weight Loss.
+
+\newpage
 
 ## Conclusion
 
