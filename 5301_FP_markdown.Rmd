@@ -293,20 +293,117 @@ ggplot(data = diet, aes(x=weight.los, fill = diet.type)) +
   theme_minimal()
 ```
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+The above box plot for the *diet.type* feature shows some outliers in diet type 'A' and 'B'. Simply eyeballing it we can assume that while 'A' appears to have outliers, it is important to keep in mind that those values are only outliers among instances that follow diet type 'A'. If we consider the whole feature, those values aren't considered outliers as the values for diet type 'C' stretches all the way up to include those values.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Diet type 'B', on the other hand, seems to have one outlier that falls far below the lowest value in the entire feature among all categories ('A', 'B', 'C').
 
-```{r cars}
-summary(cars)
+**Outlier Detection:**
+
+Now that we know that the feature has one outlier, we can try to determine what outlier it is. Since we only have to detect one outlier, we can use the grubbs single outlier detection test.
+
+```{r}
+#outlier detection
+grubbs.test(diet$weight.loss)
 ```
 
-## Including Plots
+The above code displays the outlier in the data. Since there is only outlier in the data, we chose to leave it in as it doesn't affect the overall outcome of the analysis.
 
-You can also embed plots, for example:
+## ANOVA
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+ANOVA, or Analysis of Variance, is a statistical method used to analyze the differences among group means in a sample. It is an extension of the t-test, allowing for the comparison of means across more than two groups. ANOVA assesses whether there are any statistically significant differences between the means of three or more independent (unrelated) groups.
+
+### Null and Alternate Hypotheses
+
+**Null Hypothesis (**$H_O$**)** : Means of groups by *gender* are similar, means of groups by *diet.type* are similar and there is no significant interaction between *gender* and *diet.type* features.
+
+**Alternate Hypothesis (**$H_a$**)** : There is a significant difference betweeen the means of atleast one factor or there is significant interaction between *gender* and *diet.type.*
+
+### Assumptions for ANOVA
+
+ANOVA makes the following assumptions :
+
+Independance of of observations
+
+:   Since we know that the data has been collected at random and without any bias we can surmise that that the observations are independent.
+
+Normality
+
+:   ANOVA assumes that the data within each group are normally distributed.
+
+Homogeneity of Variance
+
+:   This means that the variability within each group is roughly the same.
+
+### Pre-Analysis Testing for Weight Loss grouped by Gender
+
+```{r}
+#Normality Test for Gender
+shapiro.test(diet$weight.loss[diet$gender == "Female"])
+shapiro.test(diet$weight.loss[diet$gender == "Male"])
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+If we observe the p-values acquired from the test, we can conclude that even when grouped the data is still somewhat normally distributed. We say this because our $\alpha$ = 0.05 and both p-values are greater than 0.05.
+
+```{r}
+#Levene's Test for Homogeneity of Variance
+leveneTest(data = diet, group = diet$gender, y= diet$weight.loss)
+```
+
+Since, our p-value is greater than $\alpha$ (0.05), we can conclude that there exists Homogeneity of Variances in the *weight.loss* feature when grouped by *gender*.
+
+In the case of *weight.loss* grouped by *gender*, all our tests have yielded posisitve.
+
+### Pre-Analysis Testing for Weight Loss grouped by Diet Type
+
+```{r}
+#Normality Test for Diet Type
+shapiro.test(diet$weight.loss[diet$diet.type == "A"])
+shapiro.test(diet$weight.loss[diet$diet.type == "B"])
+shapiro.test(diet$weight.loss[diet$diet.type == "C"])
+
+```
+
+In all cases, the p-value is greater than $\alpha$ (0.05). Hence we can say that the data is normally distributed even when split into groups.
+
+```{r}
+#Levene's Test for Homogeneity of Variance
+leveneTest(data = diet, group = diet$diet.type, y= diet$weight.loss)
+```
+
+Since, our p-value is greater than $\alpha$ (0.05), we can conclude that there exists Homogeneity of Variances in the *weight.loss* feature when grouped by *diet.type*.
+
+In the case of *weight.loss* grouped by *diet.type,* all tests have yielded positive.
+
+Having met all assumptions, we can now move forward with main ANOVA test itself.
+
+### ANOVA Test
+
+```{r}
+#Two-way ANOVA
+model <- aov(weight.loss ~ gender * diet.type, data=diet)
+
+summary(model)
+```
+
+Judging by the results of the ANOVA, we can conclude that ***diet.type*** plays an important role in the analysis. ***gender*** by itself has no importance but when taken in conjunction with ***diet.type*** it may be a facotr in weight loss.
+
+Thus, we reject the null hypothesis $H_O$ that the means of groups by *gender* are similar, means of groups by *diet.type* are similar and there is no significant interaction between *gender* and *diet.type* features.
+
+## Post-Hoc Analysis
+
+```{r}
+#post-hoc analysis
+TukeyHSD(model)
+```
+
+Having rejected the null hypothesis $H_O$. We wanted to know which factor plays the biggest role in Weight Loss.
+
+## Conclusion
+
+After conducting a through pre-testing and then a Two-Way Analysis, we can safely say that Diet Type plays the most important role in Weight Loss. Even within the Various Diet Types the best Type for Weight Loss is that of Diet 'C'.
+
+This Analysis should allow anyone that followed it so far to understand what potential implications it could have at an industrial level.
+
+### Citations and References
+
+Couturier, D. L., Nicholls, R., and Fernandes, M. (2018). ANOVA with R: analysis of the diet data set. Retrieved online.
